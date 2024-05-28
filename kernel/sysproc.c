@@ -89,3 +89,14 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+// return p.sz if proc is not null.
+uint64
+sys_memsize(void)
+{
+  struct proc* p = myproc();
+  if(p == 0){
+    return 0;
+  }
+  return p->sz;
+}
