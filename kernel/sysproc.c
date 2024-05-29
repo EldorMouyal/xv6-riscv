@@ -11,7 +11,19 @@ sys_exit(void)
 {
   int n;
   argint(0, &n);
-  exit(n);
+
+  char msg[32];
+  //uint64 msg_addr;
+  //argaddr(1, &msg_addr);
+  // if (msg_addr == 0){ //checks if the arg is null
+  //   safestrcpy(msg, "No exit message", 32);
+  // } else {
+  //   argstr(1, msg, 32); //retrieves the second argument if not null
+  // }
+  if(argstr(1, msg, 32) < 0){
+    safestrcpy(msg, "No Exit Message", 32);
+  }
+  exit(n, msg);
   return 0;  // not reached
 }
 
@@ -31,8 +43,10 @@ uint64
 sys_wait(void)
 {
   uint64 p;
+  uint64 msg;
   argaddr(0, &p);
-  return wait(p);
+  argaddr(1, &msg);
+  return wait(p, msg);
 }
 
 uint64
