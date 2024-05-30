@@ -16,5 +16,5 @@ main(int argc, char* argv[]){
     int afterFree_memsize = memsize();
     printf("After freeing memory size: %d\n", afterFree_memsize);
 
-    exit(0);
+    exit(0, 0);
 }

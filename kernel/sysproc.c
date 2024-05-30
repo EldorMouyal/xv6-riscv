@@ -13,15 +13,12 @@ sys_exit(void)
   argint(0, &n);
 
   char msg[32];
-  //uint64 msg_addr;
-  //argaddr(1, &msg_addr);
-  // if (msg_addr == 0){ //checks if the arg is null
-  //   safestrcpy(msg, "No exit message", 32);
-  // } else {
-  //   argstr(1, msg, 32); //retrieves the second argument if not null
-  // }
-  if(argstr(1, msg, 32) < 0){
-    safestrcpy(msg, "No Exit Message", 32);
+  uint64 msg_addr;
+  argaddr(1, &msg_addr);
+  if (msg_addr == 0){ //checks if the arg is null
+    safestrcpy(msg, "No exit message", 32);
+  } else {
+    argstr(1, msg, 32); //retrieves the second argument if not null
   }
   exit(n, msg);
   return 0;  // not reached

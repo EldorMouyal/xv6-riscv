@@ -7,5 +7,5 @@ main(int argc, char *argv[])
 {
     char* out = "Hello World xv6\n";
     write(1,out, strlen(out));
-    exit(0);
+    exit(0, 0);
 }
