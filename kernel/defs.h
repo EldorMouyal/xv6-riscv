@@ -84,6 +84,7 @@ void            printfinit(void);
 // proc.c
 int             cpuid(void);
 void            exit(int, char*); //field added
+void            set_affinity_mask(int); //TASK5
 int             fork(void);
 int             growproc(int);
 void            proc_mapstacks(pagetable_t);

@@ -111,3 +111,10 @@ sys_memsize(void)
   }
   return p->sz;
 }
+
+uint64 sys_set_affinity_mask(void){
+  int mask;
+  argint(0, &mask);
+  set_affinity_mask(mask);
+  return 0;
+}

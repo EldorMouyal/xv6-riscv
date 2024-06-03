@@ -55,6 +55,8 @@ procinit(void)
       initlock(&p->lock, "proc");
       p->state = UNUSED;
       p->kstack = KSTACK((int) (p - proc));
+      p->affinity_mask = 0;
+      p->effective_affinity_mask = p->affinity_mask;
   }
 }
 
@@ -124,6 +126,8 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  p->affinity_mask = 0;
+  p->effective_affinity_mask = p->affinity_mask;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -169,6 +173,8 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+  p->affinity_mask = 0;
+  p->effective_affinity_mask = p->affinity_mask;
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -298,6 +304,10 @@ fork(void)
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
+
+  //restrict the child process with the affinity_mask of its parent
+  np->affinity_mask = p->affinity_mask;
+  np->effective_affinity_mask = p->affinity_mask; //reset mask to parent initial mask
 
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;
@@ -451,6 +461,7 @@ scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
+  int cpu_id = cpuid();
   
   c->proc = 0;
   for(;;){
@@ -459,7 +470,20 @@ scheduler(void)
 
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
-      if(p->state == RUNNABLE) {
+      if(p->state == RUNNABLE &&
+      ((p->effective_affinity_mask >> cpu_id) & 1)|| // shift right by cpu_id (place bit for current cpu in lsb), then performs bitwise AND with 1 to check if the lsb is set.
+      (!p->affinity_mask)) {                         //OR the process doesn't have a mask
+        printf("Process ID: %d, \tCPU ID: %d\n",p->pid, cpu_id);
+        //check if it has an affinity mask, that means we 
+        if(p->affinity_mask){
+            int cpu_bit= 1 << cpu_id; //shift left by cpu_id
+            cpu_bit = ~cpu_bit; //bitwise not
+            p->effective_affinity_mask &= cpu_bit; //bitwise and
+            if(!p->effective_affinity_mask)
+              p->effective_affinity_mask = p->affinity_mask;
+        }
+        
+        
         // Switch to chosen process.  It is the process's job
         // to release its lock and then reacquire it
         // before jumping back to us.
@@ -474,6 +498,13 @@ scheduler(void)
       release(&p->lock);
     }
   }
+}
+
+void
+set_affinity_mask(int mask){
+  struct proc *p = myproc();
+  p->affinity_mask = mask;
+  p->effective_affinity_mask = p->affinity_mask;
 }
 
 // Switch to scheduler.  Must hold only p->lock
